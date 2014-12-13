@@ -30,6 +30,10 @@
       script: bin/command.sh
     - name: Run other.sh
       script: bin/other.sh creates=/tmp/done.txt
+    - name: Echo Hello World
+      command: echo Hello World!
+    - name: Run cat in /tmp
+      command: cat test.txt chdir=/tmp
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
