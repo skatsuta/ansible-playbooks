@@ -21,6 +21,8 @@
     - name: Install a web server
       yum: name={{ web_server }} state={{ state }}
       #sudo: yes
+    - name: Enable chkconfig httpd
+      service: name={{ web_server }} state=started enabled=yes
     - name: Copy a file
       copy: src={{ file }} dest={{ dest }}/
       notify: Restart web server
