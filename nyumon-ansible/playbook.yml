@@ -11,6 +11,9 @@
     state: latest
     file: res/test.txt
     dest: /tmp
+    web_user: nginx
+    worker_processes_num: 1
+    error_log_path: /var/log/nginx/error.log
   tasks:
     - name: Install Python bindings for SELinux
       yum: pkg=libselinux-python state=latest
@@ -45,6 +48,8 @@
       file: src={{ dest }}/{{ file }} dest=/etc/symlink state=link
     - name: Set the owners of all the files under {{ dest }} to remote_user
       file: path={{ dest }} owner={{ username }} recurse=yes
+    - name: Configure nginx.conf
+      template: src=res/nginx.conf.j2 dest={{ dest }}/nginx.conf
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
