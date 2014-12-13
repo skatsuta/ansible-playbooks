@@ -9,7 +9,7 @@
     shell: /bin/bash
     web_server: httpd
     state: latest
-    file: test.txt
+    file: res/test.txt
     dest: /tmp
   tasks:
     - name: Install Python bindings for SELinux
@@ -23,8 +23,10 @@
       #sudo: yes
     - name: Enable chkconfig httpd
       service: name={{ web_server }} state=started enabled=yes
+    - name: Create a directory
+      file: path={{ dest }}/res/ state=directory
     - name: Copy a file
-      copy: src={{ file }} dest={{ dest }}/
+      copy: src={{ file }} dest={{ dest }}/{{ file }} backup=yes
       notify: Restart web server
     - name: Set an owner of the file
       file: dest={{ dest }}/{{ file }} owner={{ username }} state=file mode=777
@@ -41,8 +43,6 @@
       shell: cat {{ dest }}/{{ file }} | grep "te" >> {{ dest }}/test.out creates=/tmp/done.txt
     - name: Create a symbolic link
       file: src={{ dest }}/{{ file }} dest=/etc/symlink state=link
-    - name: Create a directory
-      file: path={{ dest }}/foobar state=directory
     - name: Set the owners of all the files under {{ dest }} to remote_user
       file: path={{ dest }} owner={{ username }} recurse=yes
   handlers:
