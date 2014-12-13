@@ -9,7 +9,7 @@
     web_server: httpd
     state: latest
     file: test.txt
-    dest: /tmp/
+    dest: /tmp
   tasks:
     - name: Install Python bindings for SELinux
       yum: pkg=libselinux-python state=latest
@@ -21,10 +21,10 @@
       yum: name={{ web_server }} state={{ state }}
       #sudo: yes
     - name: Copy a file
-      copy: src={{ file }} dest={{ dest }}
+      copy: src={{ file }} dest={{ dest }}/
       notify: Restart web server
     - name: Set an owner of the file
-      file: dest={{ dest }}{{ file }} owner={{ group }} state=file mode=777
+      file: dest={{ dest }}/{{ file }} owner={{ group }} state=file mode=777
       notify: Restart web server
     - name: Run command.sh
       script: bin/command.sh
@@ -33,11 +33,13 @@
     - name: Echo Hello World
       command: echo Hello World!
     - name: Run cat in /tmp
-      command: cat {{ file }} chdir={{ dest }}
+      command: cat {{ file }} chdir={{ dest }}/
     - name: Extract "te"
-      shell: cat {{ dest }}{{ file }} | grep "te" >> {{ dest }}test.out
+      shell: cat {{ dest }}/{{ file }} | grep "te" >> {{ dest }}/test.out creates=/tmp/done.txt
     - name: Create a symbolic link
-      file: src={{ dest }}{{ file }} dest=/etc/symlink state=link
+      file: src={{ dest }}/{{ file }} dest=/etc/symlink state=link
+    - name: Create a directory
+      file: path={{ dest }}/foobar state=directory
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
