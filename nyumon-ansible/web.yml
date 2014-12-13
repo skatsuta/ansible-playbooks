@@ -1,0 +1,31 @@
+---
+- hosts: all
+  sudo: yes
+  remote_user: vagrant
+  vars:
+    username: newuser
+    group: vagrant
+    shell: /bin/bash
+    web_server: httpd
+    state: latest
+    file: test.txt
+    dest: /tmp/
+  tasks:
+    - name: Install Python bindings for SELinux
+      yum: pkg=libselinux-python state=latest
+    - name: Disable SELnix
+      selinux: state=disabled
+    - name: Add an user
+      user: name={{ username }} group={{ group }} shell={{ shell }}
+    - name: Install a web server
+      yum: name={{ web_server }} state={{ state }}
+      #sudo: yes
+    - name: Copy a file
+      copy: src={{ file }} dest={{ dest }}
+      notify: Restart web server
+    - name: Set an owner of the file
+      file: dest={{ dest }}{{ file }} owner={{ group }} state=file
+      notify: Restart web server
+  handlers:
+    - name: Restart web server
+      service: name={{ web_server }} state=restarted
