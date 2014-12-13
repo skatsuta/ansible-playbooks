@@ -26,6 +26,10 @@
     - name: Set an owner of the file
       file: dest={{ dest }}{{ file }} owner={{ group }} state=file
       notify: Restart web server
+    - name: Run command.sh
+      script: bin/command.sh
+    - name: Run other.sh
+      script: bin/other.sh creates=/tmp/done.txt
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
