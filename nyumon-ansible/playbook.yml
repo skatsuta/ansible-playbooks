@@ -3,7 +3,8 @@
   sudo: yes
   remote_user: vagrant
   vars:
-    username: newuser
+    username: vagrant
+    newuser: newuser
     group: vagrant
     shell: /bin/bash
     web_server: httpd
@@ -16,7 +17,7 @@
     - name: Disable SELnix
       selinux: state=disabled
     - name: Add an user
-      user: name={{ username }} group={{ group }} shell={{ shell }}
+      user: name={{ newuser }} group={{ group }} shell={{ shell }}
     - name: Install a web server
       yum: name={{ web_server }} state={{ state }}
       #sudo: yes
@@ -24,7 +25,7 @@
       copy: src={{ file }} dest={{ dest }}/
       notify: Restart web server
     - name: Set an owner of the file
-      file: dest={{ dest }}/{{ file }} owner={{ group }} state=file mode=777
+      file: dest={{ dest }}/{{ file }} owner={{ username }} state=file mode=777
       notify: Restart web server
     - name: Run command.sh
       script: bin/command.sh
@@ -40,6 +41,8 @@
       file: src={{ dest }}/{{ file }} dest=/etc/symlink state=link
     - name: Create a directory
       file: path={{ dest }}/foobar state=directory
+    - name: Set the owners of all the files under {{ dest }} to remote_user
+      file: path={{ dest }} owner={{ username }} recurse=yes
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
