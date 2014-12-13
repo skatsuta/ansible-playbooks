@@ -24,7 +24,7 @@
       copy: src={{ file }} dest={{ dest }}
       notify: Restart web server
     - name: Set an owner of the file
-      file: dest={{ dest }}{{ file }} owner={{ group }} state=file
+      file: dest={{ dest }}{{ file }} owner={{ group }} state=file mode=777
       notify: Restart web server
     - name: Run command.sh
       script: bin/command.sh
@@ -36,6 +36,8 @@
       command: cat {{ file }} chdir={{ dest }}
     - name: Extract "te"
       shell: cat {{ dest }}{{ file }} | grep "te" >> {{ dest }}test.out
+    - name: Create a symbolic link
+      file: src={{ dest }}{{ file }} dest=/etc/symlink state=link
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
