@@ -33,7 +33,9 @@
     - name: Echo Hello World
       command: echo Hello World!
     - name: Run cat in /tmp
-      command: cat test.txt chdir=/tmp
+      command: cat {{ file }} chdir={{ dest }}
+    - name: Extract "te"
+      shell: cat {{ dest }}{{ file }} | grep "te" >> {{ dest }}test.out
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
