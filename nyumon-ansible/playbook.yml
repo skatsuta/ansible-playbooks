@@ -30,7 +30,7 @@
     - name: Create a directory
       file: path={{ dest }}/res/ state=directory
     - name: Copy a file
-      copy: src={{ file }} dest={{ dest }}/{{ file }} backup=yes
+      copy: src={{ file }} dest={{ dest }}/{{ file }}
       notify: Restart web server
     - name: Set an owner of the file
       file: dest={{ dest }}/{{ file }} owner={{ username }} state=file mode=777
@@ -54,15 +54,20 @@
     - name: Download {{ file_online }}
       get_url: url=https://raw.githubusercontent.com/golang/go/master/README.md
         dest={{ dest }}/README.md owner={{ username }}
-    - name: test.txt の最終行に付け加える
+    - name: Add a line in test.txt
       lineinfile:
         dest={{ dest }}/{{ file }}
         line='foobar'
-    - name: regexp で指定した行を置き換える
+    - name: Replace a line with regexp
       lineinfile:
-        dest={{ dest }}/{{ file }}
-        regexp=test
-        line='hello world'
+        dest={{ dest }}/nginx.conf
+        regexp='worker_processes_num 1;'
+        line='worker_processes_num 2;'
+    - name: Install python-dev and mysql
+      yum: name={{ item }} state=installed
+      with_items:
+        - php
+        - mysql-server
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
