@@ -16,6 +16,8 @@
     error_log_path: /var/log/nginx/error.log
     file_online: build.sbt
   tasks:
+    - name: Upgrade all packages
+      yum: name=* state=latest
     - name: Install Python bindings for SELinux
       yum: pkg=libselinux-python state=latest
     - name: Disable SELnix
