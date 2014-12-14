@@ -54,6 +54,15 @@
     - name: Download {{ file_online }}
       get_url: url=https://raw.githubusercontent.com/golang/go/master/README.md
         dest={{ dest }}/README.md owner={{ username }}
+    - name: test.txt の最終行に付け加える
+      lineinfile:
+        dest={{ dest }}/{{ file }}
+        line='foobar'
+    - name: regexp で指定した行を置き換える
+      lineinfile:
+        dest={{ dest }}/{{ file }}
+        regexp=test
+        line='hello world'
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
