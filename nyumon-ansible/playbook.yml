@@ -37,14 +37,14 @@
     - name: Set an owner of the file
       file: dest={{ dest }}/{{ file }} owner={{ username }} state=file mode=777
       notify: Restart web server
-    - name: Run command.sh
-      script: bin/command.sh
-    - name: Run other.sh
-      script: bin/other.sh creates=/tmp/done.txt
-    - name: Echo Hello World
-      command: echo Hello World!
-    - name: Run cat in /tmp
-      command: cat {{ file }} chdir={{ dest }}/
+    #- name: Run command.sh
+    #  script: bin/command.sh
+    #- name: Run other.sh
+    #  script: bin/other.sh creates=/tmp/done.txt
+    #- name: Echo Hello World
+    #  command: echo Hello World!
+    #- name: Run cat in /tmp
+    #  command: cat {{ file }} chdir={{ dest }}/
     - name: Extract "te"
       shell: cat {{ dest }}/{{ file }} | grep "te" >> {{ dest }}/test.out creates=/tmp/done.txt
     - name: Create a symbolic link
@@ -52,7 +52,9 @@
     - name: Set the owners of all the files under {{ dest }} to remote_user
       file: path={{ dest }} owner={{ username }} recurse=yes
     - name: Configure nginx.conf
-      template: src=res/nginx.conf.j2 dest={{ dest }}/nginx.conf
+      template:
+        src=res/nginx.conf.j2
+        dest={{ dest }}/nginx.conf
     - name: Download {{ file_online }}
       get_url: url=https://raw.githubusercontent.com/golang/go/master/README.md
         dest={{ dest }}/README.md owner={{ username }}
@@ -73,16 +75,13 @@
     - name: Add a user "hawk"
       user: name=hawk comment="South Reach" uid=1040 group={{ group }}
     - name: Add a public key of the user into guest os
-      authorized_key: user=hawk key={{ lookup('file', '~/.ssh/id_rsa.pub') }}
+      authorized_key: user=hawk key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
     - name:
       file: path={{ dest }}/{{ item }} state=directory
       with_items:
         - bin
         - conf
         - log
-    - name: Get info on /tmp
-      file: dest={{ dest }} state=directory
-      register: tmp
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
