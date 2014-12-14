@@ -73,7 +73,16 @@
     - name: Add a user "hawk"
       user: name=hawk comment="South Reach" uid=1040 group={{ group }}
     - name: Add a public key of the user into guest os
-      authorized_key: user=hawk key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      authorized_key: user=hawk key={{ lookup('file', '~/.ssh/id_rsa.pub') }}
+    - name:
+      file: path={{ dest }}/{{ item }} state=directory
+      with_items:
+        - bin
+        - conf
+        - log
+    - name: Get info on /tmp
+      file: dest={{ dest }} state=directory
+      register: tmp
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
