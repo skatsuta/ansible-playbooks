@@ -70,6 +70,8 @@
       with_items:
         - php
         - mysql-server
+    - name: Add a user "hawk"
+      user: name=hawk comment="South Reach" uid=1040 group={{ group }}
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
