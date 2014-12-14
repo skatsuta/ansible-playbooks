@@ -1,4 +1,4 @@
----
+
 - hosts: all
   sudo: yes
   remote_user: vagrant
@@ -14,6 +14,7 @@
     web_user: nginx
     worker_processes_num: 1
     error_log_path: /var/log/nginx/error.log
+    file_online: build.sbt
   tasks:
     - name: Install Python bindings for SELinux
       yum: pkg=libselinux-python state=latest
@@ -50,6 +51,9 @@
       file: path={{ dest }} owner={{ username }} recurse=yes
     - name: Configure nginx.conf
       template: src=res/nginx.conf.j2 dest={{ dest }}/nginx.conf
+    - name: Download {{ file_online }}
+      get_url: url=https://raw.githubusercontent.com/golang/go/master/README.md
+        dest={{ dest }}/README.md owner={{ username }}
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
