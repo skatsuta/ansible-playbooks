@@ -1,23 +1,52 @@
 
 - hosts: all
+
   sudo: yes
+
   vars:
     repos:
       - http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
       - http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
     repo: remi
     apps:
+      - libselinux-python
+      - MySQL-python
       - mysql
       - mysql-server
+    sql: migration_all.sql
+    src: resources
+    dest: /tmp
+
   tasks:
     - name: Upgrade all packages
       yum: name=* state=latest
+
     - name: Add repositories
       yum: name={{ item }} state=installed
       with_items: repos
-    - name: Install MySQL client and server
+
+    - name: Install apps
       yum: name={{ item }} enablerepo={{ repo }} state=latest
       with_items: apps
+
     - name: Enable chkconfig mysqld
       service: name=mysqld state=started enabled=yes
+
+    - name: Disable SELinux
+      selinux: state=disabled
+
+    - name: Recreate rpf databases
+      mysql_db: name={{ item[1] }} state={{ item[0] }}
+      with_nested:
+        - ['absent', 'present']
+        - ['rpf', 'rpf_pre']
+      tags: rpfdb
+
+    - name: Copy SQL files
+      copy: src={{ src }}/{{ sql }} dest={{ dest }}/{{ sql }}
+      tags: rpfdb
+
+    - name: Migrate rpf databases
+      mysql_db: name=rpf state=import target={{ dest }}/{{ sql }}
+      tags: rpfdb
 
