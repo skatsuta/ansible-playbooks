@@ -45,12 +45,12 @@
     #  command: echo Hello World!
     #- name: Run cat in /tmp
     #  command: cat {{ file }} chdir={{ dest }}/
-    - name: Extract "te"
-      shell: cat {{ dest }}/{{ file }} | grep "te" >> {{ dest }}/test.out creates=/tmp/done.txt
-    - name: Create a symbolic link
-      file: src={{ dest }}/{{ file }} dest=/etc/symlink state=link
-    - name: Set the owners of all the files under {{ dest }} to remote_user
-      file: path={{ dest }} owner={{ username }} recurse=yes
+    #- name: Extract "te"
+    #  shell: cat {{ dest }}/{{ file }} | grep "te" >> {{ dest }}/test.out creates=/tmp/done.txt
+    #- name: Create a symbolic link
+    #  file: src={{ dest }}/{{ file }} dest=/etc/symlink state=link
+    #- name: Set the owners of all the files under {{ dest }} to remote_user
+    #  file: path={{ dest }} owner={{ username }} recurse=yes
     - name: Configure nginx.conf
       template:
         src=res/nginx.conf.j2
@@ -58,30 +58,70 @@
     - name: Download {{ file_online }}
       get_url: url=https://raw.githubusercontent.com/golang/go/master/README.md
         dest={{ dest }}/README.md owner={{ username }}
-    - name: Add a line in test.txt
-      lineinfile:
-        dest={{ dest }}/{{ file }}
-        line='foobar'
-    - name: Replace a line with regexp
-      lineinfile:
-        dest={{ dest }}/nginx.conf
-        regexp='worker_processes_num 1;'
-        line='worker_processes_num 2;'
+    #- name: Add a line in test.txt
+    #  lineinfile:
+    #    dest={{ dest }}/{{ file }}
+    #    line='foobar'
+    #- name: Replace a line with regexp
+    #  lineinfile:
+    #    dest={{ dest }}/nginx.conf
+    #    regexp='worker_processes_num 1;'
+    #    line='worker_processes_num 2;'
     - name: Install python-dev and mysql
       yum: name={{ item }} state=installed
       with_items:
         - php
         - mysql-server
+      tags: items
+
     - name: Add a user "hawk"
       user: name=hawk comment="South Reach" uid=1040 group={{ group }}
-    - name: Add a public key of the user into guest os
-      authorized_key: user=hawk key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      tags: user
+
+    #- name: Add a public key of the user into guest os
+    #  authorized_key: user=hawk key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      tags: key
+
     - name:
       file: path={{ dest }}/{{ item }} state=directory
       with_items:
         - bin
         - conf
         - log
+      tags: items
+
+    - name: Echo users
+      command: echo a={{ item[0] }} b={{ item[1] }}
+      with_nested:
+        - ['alice', 'bob']
+        - [1, 2]
+      tags: nested
+
+    - name: Get info on /tmp
+      file: dest={{ dest }} state=directory
+      register: tmp
+      tags: register
+    - name: config /var/tmp
+      file: dest=/var{{ dest }} mode=777 state=directory
+      tags: register
+    - name: Get date
+      command: date +"%Y%m%d"
+      register: date
+      tags: register
+    - name: Create date file
+      file: path={{ dest }}/log.{{ date.stdout }} state=touch
+      tags: register
+
+    - name: Install apache (when debian)
+      apt: name=apache2 state=installed
+      when: ansible_os_family == "Debian"
+      tags: when
+    - name: Install apache (when redhat)
+      yum: name=httpd state=installed
+      when: ansible_os_family == "RedHat"
+      tags: when
+
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
+
