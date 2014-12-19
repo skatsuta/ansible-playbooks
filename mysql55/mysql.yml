@@ -1,0 +1,23 @@
+
+- hosts: all
+  sudo: yes
+  vars:
+    repos:
+      - http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+      - http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+    repo: remi
+    apps:
+      - mysql
+      - mysql-server
+  tasks:
+    - name: Upgrade all packages
+      yum: name=* state=latest
+    - name: Add repositories
+      yum: name={{ item }} state=installed
+      with_items: repos
+    - name: Install MySQL client and server
+      yum: name={{ item }} enablerepo={{ repo }} state=latest
+      with_items: apps
+    - name: Enable chkconfig mysqld
+      service: name=mysqld state=started enabled=yes
+
