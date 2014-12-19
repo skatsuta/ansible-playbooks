@@ -1,10 +1,9 @@
-# Vagrant + Ansible
+# Vagrant + Ansible で MySQL 5.5 をインストールする
 
-## 実行方法
+## Vagrant での実行方法
 
 ```sh
 $ vagrant up
-$ vagrant ssh-config > ssh.config
-$ ansible-playbook playbook.yml
+$ vagrant provision
 ```
 
