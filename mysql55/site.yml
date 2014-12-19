@@ -1,0 +1,21 @@
+
+- hosts: all
+  sudo: yes
+  remote_user: vagrant
+  vars:
+  tasks:
+    - name: Upgrade all packages
+      yum: name=* state=latest
+    - name: Add EPEL repository
+      shell: rpm -Uvh http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+        creates=/etc/yum.repos.d/epel.repo
+    - name: Add Remi repository
+      shell: rpm -Uvh http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+        creates=/etc/yum.repos.d/remi.repo
+    - name: Install MySQL 5.5 Client
+      yum: name=mysql enablerepo=remi state=latest
+    - name: Install MySQL 5.5 Server
+      yum: name=mysql-server enablerepo=remi state=latest
+    - name: Enable chkconfig mysqld
+      service: name=mysqld state=started enabled=yes
+
