@@ -1,7 +1,10 @@
 
 - hosts: all
+
   sudo: yes
+
   remote_user: vagrant
+
   vars:
     username: vagrant
     newuser: newuser
@@ -15,28 +18,47 @@
     worker_processes_num: 1
     error_log_path: /var/log/nginx/error.log
     file_online: build.sbt
+    word: "hello"
+
   tasks:
     - name: Upgrade all packages
       yum: name=* state=latest
+
     - name: Install Python bindings for SELinux
-      yum: pkg=libselinux-python state=latest
+      yum: name=libselinux-python state=latest
+      tags: yum
+
     - name: Disable SELnix
       selinux: state=disabled
+      tags: selinux
+
     - name: Add an user
       user: name={{ newuser }} group={{ group }} shell={{ shell }}
+      tags: user
+
     - name: Install a web server
       yum: name={{ web_server }} state={{ state }}
       #sudo: yes
+      tags: yum
+
     - name: Enable chkconfig httpd
       service: name={{ web_server }} state=started enabled=yes
+      tags: service
+
     - name: Create a directory
       file: path={{ dest }}/res/ state=directory
+      tags: file
+
     - name: Copy a file
       copy: src={{ file }} dest={{ dest }}/{{ file }}
       notify: Restart web server
+      tags: notify
+
     - name: Set an owner of the file
       file: dest={{ dest }}/{{ file }} owner={{ username }} state=file mode=777
       notify: Restart web server
+      tags: notify
+
     #- name: Run command.sh
     #  script: bin/command.sh
     #- name: Run other.sh
@@ -119,6 +141,10 @@
     - name: Install apache (when redhat)
       yum: name=httpd state=installed
       when: ansible_os_family == "RedHat"
+      tags: when
+    - name: if word is defined
+      command: echo "{{ word }}"
+      when: word is defined
       tags: when
 
   handlers:
