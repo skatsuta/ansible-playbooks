@@ -1,7 +1,10 @@
 
 - hosts: all
+
   sudo: yes
+
   remote_user: vagrant
+
   vars:
     username: vagrant
     newuser: newuser
@@ -15,28 +18,47 @@
     worker_processes_num: 1
     error_log_path: /var/log/nginx/error.log
     file_online: build.sbt
+    word: "hello"
+
   tasks:
     - name: Upgrade all packages
       yum: name=* state=latest
+
     - name: Install Python bindings for SELinux
-      yum: pkg=libselinux-python state=latest
+      yum: name=libselinux-python state=latest
+      tags: yum
+
     - name: Disable SELnix
       selinux: state=disabled
+      tags: selinux
+
     - name: Add an user
       user: name={{ newuser }} group={{ group }} shell={{ shell }}
+      tags: user
+
     - name: Install a web server
       yum: name={{ web_server }} state={{ state }}
       #sudo: yes
+      tags: yum
+
     - name: Enable chkconfig httpd
       service: name={{ web_server }} state=started enabled=yes
+      tags: service
+
     - name: Create a directory
       file: path={{ dest }}/res/ state=directory
+      tags: file
+
     - name: Copy a file
       copy: src={{ file }} dest={{ dest }}/{{ file }}
       notify: Restart web server
+      tags: notify
+
     - name: Set an owner of the file
       file: dest={{ dest }}/{{ file }} owner={{ username }} state=file mode=777
       notify: Restart web server
+      tags: notify
+
     #- name: Run command.sh
     #  script: bin/command.sh
     #- name: Run other.sh
@@ -45,12 +67,12 @@
     #  command: echo Hello World!
     #- name: Run cat in /tmp
     #  command: cat {{ file }} chdir={{ dest }}/
-    - name: Extract "te"
-      shell: cat {{ dest }}/{{ file }} | grep "te" >> {{ dest }}/test.out creates=/tmp/done.txt
-    - name: Create a symbolic link
-      file: src={{ dest }}/{{ file }} dest=/etc/symlink state=link
-    - name: Set the owners of all the files under {{ dest }} to remote_user
-      file: path={{ dest }} owner={{ username }} recurse=yes
+    #- name: Extract "te"
+    #  shell: cat {{ dest }}/{{ file }} | grep "te" >> {{ dest }}/test.out creates=/tmp/done.txt
+    #- name: Create a symbolic link
+    #  file: src={{ dest }}/{{ file }} dest=/etc/symlink state=link
+    #- name: Set the owners of all the files under {{ dest }} to remote_user
+    #  file: path={{ dest }} owner={{ username }} recurse=yes
     - name: Configure nginx.conf
       template:
         src=res/nginx.conf.j2
@@ -58,30 +80,74 @@
     - name: Download {{ file_online }}
       get_url: url=https://raw.githubusercontent.com/golang/go/master/README.md
         dest={{ dest }}/README.md owner={{ username }}
-    - name: Add a line in test.txt
-      lineinfile:
-        dest={{ dest }}/{{ file }}
-        line='foobar'
-    - name: Replace a line with regexp
-      lineinfile:
-        dest={{ dest }}/nginx.conf
-        regexp='worker_processes_num 1;'
-        line='worker_processes_num 2;'
+    #- name: Add a line in test.txt
+    #  lineinfile:
+    #    dest={{ dest }}/{{ file }}
+    #    line='foobar'
+    #- name: Replace a line with regexp
+    #  lineinfile:
+    #    dest={{ dest }}/nginx.conf
+    #    regexp='worker_processes_num 1;'
+    #    line='worker_processes_num 2;'
     - name: Install python-dev and mysql
       yum: name={{ item }} state=installed
       with_items:
         - php
         - mysql-server
+      tags: items
+
     - name: Add a user "hawk"
       user: name=hawk comment="South Reach" uid=1040 group={{ group }}
-    - name: Add a public key of the user into guest os
-      authorized_key: user=hawk key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      tags: user
+
+    #- name: Add a public key of the user into guest os
+    #  authorized_key: user=hawk key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      tags: key
+
     - name:
       file: path={{ dest }}/{{ item }} state=directory
       with_items:
         - bin
         - conf
         - log
+      tags: items
+
+    - name: Echo users
+      command: echo a={{ item[0] }} b={{ item[1] }}
+      with_nested:
+        - ['alice', 'bob']
+        - [1, 2]
+      tags: nested
+
+    - name: Get info on /tmp
+      file: dest={{ dest }} state=directory
+      register: tmp
+      tags: register
+    - name: config /var/tmp
+      file: dest=/var{{ dest }} mode=777 state=directory
+      tags: register
+    - name: Get date
+      command: date +"%Y%m%d"
+      register: date
+      tags: register
+    - name: Create date file
+      file: path={{ dest }}/log.{{ date.stdout }} state=touch
+      tags: register
+
+    - name: Install apache (when debian)
+      apt: name=apache2 state=installed
+      when: ansible_os_family == "Debian"
+      tags: when
+    - name: Install apache (when redhat)
+      yum: name=httpd state=installed
+      when: ansible_os_family == "RedHat"
+      tags: when
+    - name: if word is defined
+      command: echo "{{ word }}"
+      when: word is defined
+      tags: when
+
   handlers:
     - name: Restart web server
       service: name={{ web_server }} state=restarted
+
