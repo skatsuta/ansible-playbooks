@@ -1,0 +1,33 @@
+
+- hosts: all
+
+  sudo: yes
+
+  vars:
+    repos:
+      # EPEL
+      - http://mirror.webtatic.com/yum/el7/epel-release.rpm
+      # Webtatic
+      - http://mirror.webtatic.com/yum/el7/webtatic-release.rpm
+    packages:
+      - httpd
+      - php56w
+
+  tasks:
+    #- name: Upgrade all packages
+    #  yum: name=* state=latest
+
+    - name: Add repos
+      yum: name={{ item }} state=installed
+      with_items: repos
+
+    - name: Install packages
+      yum: name={{ item }} state=latest
+      with_items: packages
+
+    - name: Start HTTP server
+      service: >
+        name=httpd
+        state=started
+        enabled=yes
+
